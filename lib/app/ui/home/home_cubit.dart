@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:todo_list/app/models/todo.dart';
+import 'package:todo_list/app/services/persistence/persistence_service.dart';
 
 abstract class HomeCubitState {}
 
@@ -12,11 +14,19 @@ class Loaded extends HomeCubitState {
 }
 
 class HomeCubit extends Cubit<HomeCubitState> {
-  final List<Todo> _todos = [];
+  late final PersistenceService _persistence;
 
   HomeCubit() : super(Initialize()) {
-    emit(Loaded([]));
+    GetIt.I.isReady<PersistenceService>().then((_) async {
+      _persistence = GetIt.I<PersistenceService>();
+      final objects = await _persistence.getAllJson('todos');
+      _todos = objects.map((json) => Todo.fromJson(json)).toList();
+
+      emit(Loaded(_todos));
+    });
   }
+
+  late final List<Todo> _todos;
 
   void addTodo() {
     final todo = Todo(
@@ -24,12 +34,15 @@ class HomeCubit extends Cubit<HomeCubitState> {
       description: 'description',
     );
     _todos.add(todo);
+    _persistence.insertJson('todos', todo.id, todo.toJson());
 
     emit(Loaded([..._todos]));
   }
 
   void removeTodo(Todo todo) {
     _todos.remove(todo);
+    _persistence.removeFromId('todos', todo.id);
+
     emit(Loaded([..._todos]));
   }
 }

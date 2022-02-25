@@ -23,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 return const Center(child: CircularProgressIndicator());
               } else if (state is Loaded) {
                 final todos = state.todos;
+                if (todos.isEmpty) return const Center(child: Text('No todo found'));
                 return ListView(children: todos.map(buildTodoTile).toList());
               }
 
