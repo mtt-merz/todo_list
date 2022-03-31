@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:todo_list/app/models/todo.dart';
 import 'package:todo_list/app/ui/home/home_cubit.dart';
 
@@ -11,7 +12,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final HomeCubit cubit = HomeCubit();
+  final cubit = GetIt.I<HomeCubit>();
 
   @override
   Widget build(BuildContext context) => Scaffold(

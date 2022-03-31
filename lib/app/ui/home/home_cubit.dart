@@ -1,7 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get_it/get_it.dart';
 import 'package:todo_list/app/models/todo.dart';
-import 'package:todo_list/app/services/persistence/persistence_service.dart';
+import 'package:todo_list/app/repository/todo_repository.dart';
 
 abstract class HomeCubitState {}
 
@@ -14,35 +13,20 @@ class Loaded extends HomeCubitState {
 }
 
 class HomeCubit extends Cubit<HomeCubitState> {
-  late final PersistenceService _persistence;
+  final TodoRepository _repository;
 
-  HomeCubit() : super(Initialize()) {
-    GetIt.I.isReady<PersistenceService>().then((_) async {
-      _persistence = GetIt.I<PersistenceService>();
-      final objects = await _persistence.getAllJson('todos');
-      _todos = objects.map((json) => Todo.fromJson(json)).toList();
-
-      emit(Loaded(_todos));
-    });
+  HomeCubit(this._repository) : super(Initialize()) {
+    _repository.todosStream.listen((todos) => emit(Loaded(todos)));
   }
-
-  late final List<Todo> _todos;
 
   void addTodo() {
     final todo = Todo(
-      title: 'TODO ${_todos.length}',
+      title: 'TODO ${_repository.todosNumber}',
       description: 'description',
     );
-    _todos.add(todo);
-    _persistence.insertJson('todos', todo.id, todo.toJson());
 
-    emit(Loaded([..._todos]));
+    _repository.insert(todo);
   }
 
-  void removeTodo(Todo todo) {
-    _todos.remove(todo);
-    _persistence.removeFromId('todos', todo.id);
-
-    emit(Loaded([..._todos]));
-  }
+  void removeTodo(Todo todo) => _repository.remove(todo);
 }
